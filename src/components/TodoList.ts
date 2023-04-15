@@ -136,10 +136,10 @@ const TodoList = (): HTMLElement => {
     };
     updateTodoListElement();
 
-    countElement.textContent = `(${filteredTodoList.length})`;
+    countElement.textContent = `(${filteredTodoList.length}) left items`;
 
     const updateCountElement = () => {
-      countElement.textContent = `(${filteredTodoList.length})`;
+      countElement.textContent = `(${filteredTodoList.length}) left items`;
     };
 
     const applyFilter = (filter: (todo: Todo) => boolean) => {
