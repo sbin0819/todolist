@@ -11,7 +11,13 @@ const TodoList = (): HTMLElement => {
   const todoListElement = doc.createElement('div');
   const countElement = doc.createElement('div');
 
-  const todoList: Todo[] = [];
+  const todoList: Todo[] = [
+    { id: 1, text: 'todo1', completed: false },
+    { id: 2, text: 'todo2', completed: false },
+    { id: 3, text: 'todo3', completed: false },
+    { id: 4, text: 'todo4', completed: false },
+    { id: 5, text: 'todo5', completed: false },
+  ];
 
   const createTodoElement = (todo: Todo): HTMLElement => {
     const todoElement = doc.createElement('div');
@@ -103,8 +109,10 @@ const TodoList = (): HTMLElement => {
       ({ id }) => id === +((event.target as Element)?.id || '')
     );
     if (destinationTodo) {
-      const sourceIndex = todoList.indexOf(sourceTodo);
-      const destinationIndex = todoList.indexOf(destinationTodo);
+      const sourceIndex = todoList.findIndex((el) => el.id === sourceTodo.id);
+      const destinationIndex = todoList.findIndex(
+        (el) => el.id === destinationTodo.id
+      );
       todoList.splice(sourceIndex, 1);
       todoList.splice(destinationIndex, 0, sourceTodo);
       const newTodoElements = todoList.map(createTodoElement);
