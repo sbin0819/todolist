@@ -50,6 +50,7 @@ const TodoList = (): HTMLElement => {
       draggedElement = todoElement.cloneNode(true) as HTMLElement;
       draggedElement.classList.add('dragging');
       draggedElement.style.position = 'absolute';
+
       document.body.appendChild(draggedElement);
       draggedIndex = filteredTodoList.findIndex((t) => t.id === todo.id);
       event.preventDefault();
@@ -127,62 +128,6 @@ const TodoList = (): HTMLElement => {
   //   }
   // };
 
-  const moveTodoElement = (sourceIndex: number, targetIndex: number) => {
-    const [draggedTodo] = todoList.splice(sourceIndex, 1);
-    todoList.splice(targetIndex, 0, draggedTodo);
-
-    const [filteredDraggedTodo] = filteredTodoList.splice(sourceIndex, 1);
-    filteredTodoList.splice(targetIndex, 0, filteredDraggedTodo);
-    updateTodoListElement();
-  };
-
-  document.addEventListener('mousemove', (event: MouseEvent) => {
-    if (draggedElement) {
-      draggedElement.style.left =
-        event.pageX - draggedElement.offsetWidth / 2 + 'px';
-      draggedElement.style.top =
-        event.pageY - draggedElement.offsetHeight / 2 + 'px';
-
-      const target = event.target as HTMLElement;
-
-      if (target && target !== targetElement) {
-        if (targetElement) {
-          targetElement.classList.remove('drag-over');
-        }
-
-        if (target.classList.contains('todo-item')) {
-          targetElement = target;
-          targetElement.classList.add('drag-over');
-        } else {
-          targetElement = null;
-        }
-      }
-    }
-  });
-
-  document.addEventListener('mouseup', () => {
-    if (draggedElement) {
-      document.body.removeChild(draggedElement);
-    }
-
-    if (draggedElement && targetElement) {
-      const sourceIndex = todoList.findIndex((t) => t.id === draggedIndex);
-      const targetIndex = todoList.findIndex((t) => t.id === +targetElement.id);
-
-      if (sourceIndex !== -1 && targetIndex !== -1) {
-        moveTodoElement(sourceIndex, targetIndex);
-      }
-    }
-
-    draggedElement = null;
-    draggedIndex = null;
-
-    if (targetElement) {
-      targetElement.classList.remove('drag-over');
-      targetElement = null;
-    }
-  });
-
   const resetDragState = () => {
     if (draggedElement) {
       document.body.removeChild(draggedElement);
@@ -196,21 +141,72 @@ const TodoList = (): HTMLElement => {
     }
   };
 
-  document.addEventListener('keyup', (event) => {
-    if (event.key === 'Escape') {
-      resetDragState();
+  const moveTodoElement = (sourceIndex: number, targetIndex: number) => {
+    const [draggedTodo] = todoList.splice(sourceIndex, 1);
+    todoList.splice(targetIndex, 0, draggedTodo);
+
+    const [filteredDraggedTodo] = filteredTodoList.splice(sourceIndex, 1);
+    filteredTodoList.splice(targetIndex, 0, filteredDraggedTodo);
+    updateTodoListElement();
+  };
+
+  document.addEventListener('mousemove', (event: MouseEvent) => {
+    if (draggedElement) {
+      draggedElement.style.left =
+        event.pageX - draggedElement.offsetWidth / 2 - 34 + 'px';
+      draggedElement.style.top =
+        event.pageY - draggedElement.offsetHeight / 2 + 'px';
+
+      const target = event.target as HTMLElement;
+      if (target && target !== targetElement) {
+        if (targetElement) {
+          targetElement.classList.remove('drag-over');
+        }
+
+        if (target.classList.contains('todo-item')) {
+          targetElement = target;
+          targetElement.classList.add('drag-over');
+        } else {
+          targetElement = null;
+        }
+      }
+
+      const containerRect = containerElement.getBoundingClientRect();
+      if (
+        event.clientX < containerRect.left ||
+        event.clientX > containerRect.right ||
+        event.clientY < containerRect.top ||
+        event.clientY > containerRect.bottom
+      ) {
+        resetDragState();
+      }
     }
   });
 
-  document.addEventListener('mousemove', (event) => {
-    const containerRect = containerElement.getBoundingClientRect();
+  document.addEventListener('mouseup', () => {
+    if (draggedElement) {
+      document.body.removeChild(draggedElement);
+    }
 
-    if (
-      event.clientX < containerRect.left ||
-      event.clientX > containerRect.right ||
-      event.clientY < containerRect.top ||
-      event.clientY > containerRect.bottom
-    ) {
+    if (draggedElement && targetElement) {
+      const targetIndex = todoList.findIndex((t) => t.id === +targetElement.id);
+
+      if (draggedIndex && targetIndex !== -1) {
+        moveTodoElement(draggedIndex, targetIndex);
+      }
+    }
+
+    draggedElement = null;
+    draggedIndex = null;
+
+    if (targetElement) {
+      targetElement.classList.remove('drag-over');
+      targetElement = null;
+    }
+  });
+
+  document.addEventListener('keyup', (event) => {
+    if (event.key === 'Escape') {
       resetDragState();
     }
   });
