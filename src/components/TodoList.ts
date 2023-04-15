@@ -27,7 +27,9 @@ const TodoList = (): HTMLElement => {
   ];
   let filteredTodoList = [...todoList];
 
-  let draggedElementId: string | null = null;
+  let draggedElement: HTMLElement | null = null;
+  let draggedIndex: number | null = null;
+  let targetElement: HTMLElement | null = null;
 
   const createTodoElement = (todo: Todo): HTMLElement => {
     const todoElement = document.createElement('div');
@@ -44,17 +46,14 @@ const TodoList = (): HTMLElement => {
       todoElement.classList.toggle('completed');
     });
 
-    // add drag and drop support
-    todoElement.setAttribute('draggable', 'true');
-    todoElement.addEventListener('dragstart', (event: DragEvent) => {
-      event.dataTransfer?.setData('text/plain', JSON.stringify(todo));
-      draggedElementId = JSON.stringify(todo.id);
-      todoElement.classList.add('dragging');
+    todoElement.addEventListener('mousedown', (event) => {
+      draggedElement = todoElement.cloneNode(true) as HTMLElement;
+      draggedElement.classList.add('dragging');
+      draggedElement.style.position = 'absolute';
+      document.body.appendChild(draggedElement);
+      draggedIndex = filteredTodoList.findIndex((t) => t.id === todo.id);
+      event.preventDefault();
     });
-    todoElement.addEventListener('dragend', () => {
-      todoElement.classList.remove('dragging');
-    });
-
     return todoElement;
   };
 
@@ -93,118 +92,126 @@ const TodoList = (): HTMLElement => {
     })
   );
 
-  let hoverPreviewTimeout: ReturnType<typeof setTimeout> | null = null;
-  let previewIndex: number | null = null;
+  // let hoverPreviewTimeout: ReturnType<typeof setTimeout> | null = null;
+  // let previewIndex: number | null = null;
 
-  const showPreview = (sourceId: string, target: Element) => {
-    const sourceTodo = filteredTodoList.find(
-      (todo) => todo.id.toString() === sourceId
-    );
-    const targetTodo = filteredTodoList.find(
-      (todo) => todo.id.toString() === target.id
-    );
+  // const showPreview = (sourceId: string, target: Element) => {
+  //   const sourceTodo = filteredTodoList.find(
+  //     (todo) => todo.id.toString() === sourceId
+  //   );
+  //   const targetTodo = filteredTodoList.find(
+  //     (todo) => todo.id.toString() === target.id
+  //   );
 
-    if (sourceTodo && targetTodo) {
-      const sourceIndex = filteredTodoList.indexOf(sourceTodo);
-      const targetIndex = filteredTodoList.indexOf(targetTodo);
+  //   if (sourceTodo && targetTodo) {
+  //     const sourceIndex = filteredTodoList.indexOf(sourceTodo);
+  //     const targetIndex = filteredTodoList.indexOf(targetTodo);
 
-      previewIndex = targetIndex;
-      filteredTodoList.splice(sourceIndex, 1);
-      filteredTodoList.splice(targetIndex, 0, sourceTodo);
-      updateTodoListElement();
+  //     previewIndex = targetIndex;
+  //     filteredTodoList.splice(sourceIndex, 1);
+  //     filteredTodoList.splice(targetIndex, 0, sourceTodo);
+  //     updateTodoListElement();
+  //   }
+  // };
+
+  // const removePreview = () => {
+  //   if (previewIndex !== null) {
+  //     const sourceTodo = filteredTodoList[previewIndex];
+  //     const originalIndex = todoList.findIndex(
+  //       (todo) => todo.id === sourceTodo.id
+  //     );
+  //     filteredTodoList.splice(previewIndex, 1);
+  //     filteredTodoList.splice(originalIndex, 0, sourceTodo);
+  //     updateTodoListElement();
+  //     previewIndex = null;
+  //   }
+  // };
+
+  const moveTodoElement = (sourceIndex: number, targetIndex: number) => {
+    const [draggedTodo] = todoList.splice(sourceIndex, 1);
+    todoList.splice(targetIndex, 0, draggedTodo);
+
+    const [filteredDraggedTodo] = filteredTodoList.splice(sourceIndex, 1);
+    filteredTodoList.splice(targetIndex, 0, filteredDraggedTodo);
+    updateTodoListElement();
+  };
+
+  document.addEventListener('mousemove', (event: MouseEvent) => {
+    if (draggedElement) {
+      draggedElement.style.left =
+        event.pageX - draggedElement.offsetWidth / 2 + 'px';
+      draggedElement.style.top =
+        event.pageY - draggedElement.offsetHeight / 2 + 'px';
+
+      const target = event.target as HTMLElement;
+
+      if (target && target !== targetElement) {
+        if (targetElement) {
+          targetElement.classList.remove('drag-over');
+        }
+
+        if (target.classList.contains('todo-item')) {
+          targetElement = target;
+          targetElement.classList.add('drag-over');
+        } else {
+          targetElement = null;
+        }
+      }
+    }
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (draggedElement) {
+      document.body.removeChild(draggedElement);
+    }
+
+    if (draggedElement && targetElement) {
+      const sourceIndex = todoList.findIndex((t) => t.id === draggedIndex);
+      const targetIndex = todoList.findIndex((t) => t.id === +targetElement.id);
+
+      if (sourceIndex !== -1 && targetIndex !== -1) {
+        moveTodoElement(sourceIndex, targetIndex);
+      }
+    }
+
+    draggedElement = null;
+    draggedIndex = null;
+
+    if (targetElement) {
+      targetElement.classList.remove('drag-over');
+      targetElement = null;
+    }
+  });
+
+  const resetDragState = () => {
+    if (draggedElement) {
+      document.body.removeChild(draggedElement);
+      draggedElement = null;
+      draggedIndex = null;
+    }
+
+    if (targetElement) {
+      targetElement.classList.remove('drag-over');
+      targetElement = null;
     }
   };
 
-  const removePreview = () => {
-    if (previewIndex !== null) {
-      const sourceTodo = filteredTodoList[previewIndex];
-      const originalIndex = todoList.findIndex(
-        (todo) => todo.id === sourceTodo.id
-      );
-      filteredTodoList.splice(previewIndex, 1);
-      filteredTodoList.splice(originalIndex, 0, sourceTodo);
-      updateTodoListElement();
-      previewIndex = null;
-    }
-  };
-
-  todoListElement.addEventListener('dragover', (event: DragEvent) => {
-    event.preventDefault();
-  });
-
-  todoListElement.addEventListener('dragenter', (event: DragEvent) => {
-    event.preventDefault();
-    const target = event.target as Element;
-
-    if (draggedElementId && target.classList.contains('todo-item')) {
-      if (hoverPreviewTimeout) {
-        clearTimeout(hoverPreviewTimeout);
-      }
-
-      hoverPreviewTimeout = setTimeout(() => {
-        showPreview(draggedElementId, target);
-      }, 2000);
+  document.addEventListener('keyup', (event) => {
+    if (event.key === 'Escape') {
+      resetDragState();
     }
   });
 
-  todoListElement.addEventListener('dragleave', (event: DragEvent) => {
-    event.preventDefault();
-    const target = event.target as Element;
+  document.addEventListener('mousemove', (event) => {
+    const containerRect = containerElement.getBoundingClientRect();
 
-    if (draggedElementId && target.classList.contains('todo-item')) {
-      if (hoverPreviewTimeout && previewIndex !== null) {
-        clearTimeout(hoverPreviewTimeout);
-      }
-      removePreview();
-    }
-  });
-
-  todoListElement.addEventListener('drop', (event: DragEvent) => {
-    event.preventDefault();
-    const { dataTransfer } = event;
-    const target = event.target as Element;
-    const sourceTodo = JSON.parse(dataTransfer?.getData('text/plain') || '');
-    const destinationTodo = filteredTodoList.find(
-      ({ id }) => id === +(target?.id || '')
-    );
-    if (destinationTodo) {
-      const sourceIndex = todoList.findIndex((el) => el.id === sourceTodo.id);
-      const destinationIndex = todoList.findIndex(
-        (el) => el.id === destinationTodo.id
-      );
-      todoList.splice(sourceIndex, 1);
-      todoList.splice(destinationIndex, 0, sourceTodo);
-
-      // Update filteredTodoList as well
-      const filteredSourceIndex = filteredTodoList.findIndex(
-        (el) => el.id === sourceTodo.id
-      );
-      const filteredDestinationIndex = filteredTodoList.findIndex(
-        (el) => el.id === destinationTodo.id
-      );
-      filteredTodoList.splice(filteredSourceIndex, 1);
-      filteredTodoList.splice(filteredDestinationIndex, 0, sourceTodo);
-
-      if (hoverPreviewTimeout) {
-        clearTimeout(hoverPreviewTimeout);
-      }
-
-      updateTodoListElement(); // Replace the newTodoElements-related code
-    }
-  });
-
-  formElement.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const input =
-      formElement.querySelector<HTMLInputElement>('input[name="todo"]');
-    const text = input.value.trim();
-    input.value = '';
-    if (text) {
-      const todo = { id: todoList.length + 1, text, completed: false };
-      const todoElement = createTodoElement(todo);
-      todoList.unshift(todo);
-      todoListElement.prepend(todoElement);
-      updateCountElement();
+    if (
+      event.clientX < containerRect.left ||
+      event.clientX > containerRect.right ||
+      event.clientY < containerRect.top ||
+      event.clientY > containerRect.bottom
+    ) {
+      resetDragState();
     }
   });
 
