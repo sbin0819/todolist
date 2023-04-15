@@ -49,3 +49,8 @@
   margin-right: 8px;
   background: #eee;
 }
+
+.bottom-container button.active {
+  color: #fff;
+  background: darkorange;
+}

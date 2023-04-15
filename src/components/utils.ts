@@ -1,37 +1,3 @@
-type Todo = {
-  id: number;
-  text: string;
-  completed: boolean;
-};
-
-export const createTodoElement = (todo: Todo): HTMLElement => {
-  const todoElement = document.createElement('div');
-
-  todoElement.id = todo.id.toString();
-  todoElement.className = 'todo-item';
-  todoElement.textContent = todo.text;
-
-  if (todo.completed) {
-    todoElement.classList.add('completed');
-  }
-  todoElement.addEventListener('click', () => {
-    todo.completed = !todo.completed;
-    todoElement.classList.toggle('completed');
-  });
-
-  // add drag and drop support
-  todoElement.setAttribute('draggable', 'true');
-  todoElement.addEventListener('dragstart', (event: DragEvent) => {
-    event.dataTransfer?.setData('text/plain', JSON.stringify(todo));
-    todoElement.classList.add('dragging');
-  });
-  todoElement.addEventListener('dragend', () => {
-    todoElement.classList.remove('dragging');
-  });
-
-  return todoElement;
-};
-
 export const createFormElement = (): HTMLFormElement => {
   const formElement = document.createElement('form');
   const inputElement = document.createElement('input');
@@ -46,4 +12,33 @@ export const createFormElement = (): HTMLFormElement => {
   formElement.append(inputElement, submitButtonElement);
 
   return formElement;
+};
+
+const setActiveFilterButton = (activeButton: HTMLElement) => {
+  const filterButtons = Array.from(document.querySelectorAll('.filter-button'));
+  filterButtons.forEach((button) => {
+    if (button === activeButton) {
+      button.classList.add('active');
+    } else {
+      button.classList.remove('active');
+    }
+  });
+};
+
+export const createFilterButtonElement = (
+  text: string,
+  eventHandler: () => void,
+  isActive?: boolean
+) => {
+  const buttonElement = document.createElement('button');
+  buttonElement.textContent = text;
+  buttonElement.classList.add('filter-button');
+  buttonElement.addEventListener('click', () => {
+    setActiveFilterButton(buttonElement);
+    eventHandler();
+  });
+  if (isActive) {
+    buttonElement.classList.add('active');
+  }
+  return buttonElement;
 };
