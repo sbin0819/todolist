@@ -37,6 +37,7 @@
   align-items: center;
   border-bottom: 1px solid #ddd;
   height: 50px;
+  cursor: pointer;
 }
 
 .todo-item.completed {

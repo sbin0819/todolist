@@ -1,3 +1,5 @@
+import type { FilterStatus, Todo } from './types';
+
 export const createFormElement = (): HTMLFormElement => {
   const formElement = document.createElement('form');
   const inputElement = document.createElement('input');
@@ -14,31 +16,33 @@ export const createFormElement = (): HTMLFormElement => {
   return formElement;
 };
 
-const setActiveFilterButton = (activeButton: HTMLElement) => {
-  const filterButtons = Array.from(document.querySelectorAll('.filter-button'));
-  filterButtons.forEach((button) => {
-    if (button === activeButton) {
-      button.classList.add('active');
-    } else {
-      button.classList.remove('active');
-    }
+export const createTodoElement = (todo: Todo): HTMLElement => {
+  const todoElement = document.createElement('div');
+
+  todoElement.id = todo.id.toString();
+  todoElement.className = 'todo-item';
+  todoElement.textContent = todo.text;
+
+  if (todo.completed) {
+    todoElement.classList.add('completed');
+  }
+  todoElement.addEventListener('click', () => {
+    todo.completed = !todo.completed;
+    todoElement.classList.toggle('completed');
   });
+
+  return todoElement;
 };
 
-export const createFilterButtonElement = (
-  text: string,
-  eventHandler: () => void,
-  isActive?: boolean
-) => {
-  const buttonElement = document.createElement('button');
-  buttonElement.textContent = text;
-  buttonElement.classList.add('filter-button');
-  buttonElement.addEventListener('click', () => {
-    setActiveFilterButton(buttonElement);
-    eventHandler();
-  });
-  if (isActive) {
-    buttonElement.classList.add('active');
+export const filterHandler = (
+  status: FilterStatus
+): ((todo?: Todo) => boolean) => {
+  switch (status) {
+    case 'all':
+      return () => true;
+    case 'incompleted':
+      return (todo: Todo) => !todo.completed;
+    case 'completed':
+      return (todo: Todo) => todo.completed;
   }
-  return buttonElement;
 };

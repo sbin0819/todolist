@@ -1,6 +1,8 @@
 import type { Todo } from './types';
-import { createFormElement, createFilterButtonElement } from './utils';
+import { createFormElement, createTodoElement, filterHandler } from './utils';
 import './todolist.css';
+
+type FilterStatus = 'all' | 'incompleted' | 'completed';
 
 const TodoList = (): HTMLElement => {
   const containerElement = document.createElement('div');
@@ -26,68 +28,40 @@ const TodoList = (): HTMLElement => {
     { id: 5, text: 'todo5', completed: false },
   ];
   let filteredTodoList = [...todoList];
+  let filterStatus: FilterStatus = 'all';
 
   let draggedElement: HTMLElement | null = null;
   let draggedIndex: number | null = null;
   let targetElement: HTMLElement | null = null;
 
-  const createTodoElement = (todo: Todo): HTMLElement => {
-    const todoElement = document.createElement('div');
-
-    todoElement.id = todo.id.toString();
-    todoElement.className = 'todo-item';
-    todoElement.textContent = todo.text;
-
-    if (todo.completed) {
-      todoElement.classList.add('completed');
-    }
-    todoElement.addEventListener('click', () => {
-      todo.completed = !todo.completed;
-      todoElement.classList.toggle('completed');
-    });
-
-    // const handleMouseDown = (event: MouseEvent) => {
-    //   draggedElement = todoElement.cloneNode(true) as HTMLElement;
-    //   draggedElement.classList.add('dragging');
-    //   draggedElement.style.position = 'absolute';
-
-    //   document.body.appendChild(draggedElement);
-    //   draggedIndex = filteredTodoList.findIndex((t) => t.id === todo.id);
-    //   event.preventDefault();
-    // };
-
-    // todoElement.addEventListener('mousedown', handleMouseDown);
-    // todoElement.dataset.listener = 'mousedown';
-    // todoElement.dataset.listenerCallback = handleMouseDown.toString();
-
-    return todoElement;
-  };
-
   const handleMouseDown =
-    (element: HTMLElement, todo: Todo, id: number) => (event: MouseEvent) => {
+    (element: HTMLElement, id: number) => (event: MouseEvent) => {
       draggedElement = element.cloneNode(true) as HTMLElement;
       draggedElement.classList.add('dragging');
       draggedElement.style.position = 'absolute';
-
       document.body.appendChild(draggedElement);
-      draggedIndex = filteredTodoList.findIndex((t) => t.id === +id);
+      draggedIndex = todoList.findIndex((t) => t?.id === +id);
       event.preventDefault();
     };
 
   const updateTodoListElement = () => {
+    const filter = filterHandler(filterStatus);
     todoListElement.innerHTML = '';
-    const filteredTodoElements = todoList.map((todo) => {
+    const filteredTodoElements = todoList.filter(filter).map((todo) => {
       const element = createTodoElement(todo);
-      element.removeEventListener(
-        'mousedown',
-        handleMouseDown(element, todo, +element.id)
-      );
-      element.addEventListener(
-        'mousedown',
-        handleMouseDown(element, todo, +element.id)
-      );
+      if (filterStatus === 'incompleted') {
+        element.removeEventListener(
+          'mousedown',
+          handleMouseDown(element, +element.id)
+        );
+        element.addEventListener(
+          'mousedown',
+          handleMouseDown(element, +element.id)
+        );
+      }
       return element;
     });
+
     todoListElement.append(...filteredTodoElements);
   };
   updateTodoListElement();
@@ -100,8 +74,44 @@ const TodoList = (): HTMLElement => {
 
   const applyFilter = (filter: (todo: Todo) => boolean) => {
     filteredTodoList = todoList.filter(filter);
-    updateTodoListElement();
     updateCountElement();
+    updateTodoListElement();
+  };
+
+  const setActiveFilterButton = (
+    activeButton: HTMLElement,
+    status: FilterStatus
+  ) => {
+    const filterButtons = Array.from(
+      document.querySelectorAll('.filter-button')
+    );
+    filterButtons.forEach((button) => {
+      if (button === activeButton) {
+        button.classList.add('active');
+        filterStatus = status;
+      } else {
+        button.classList.remove('active');
+      }
+    });
+  };
+
+  const createFilterButtonElement = (
+    text: string,
+    eventHandler: () => void,
+    isActive: boolean,
+    status: FilterStatus
+  ) => {
+    const buttonElement = document.createElement('button');
+    buttonElement.textContent = text;
+    buttonElement.classList.add('filter-button');
+    buttonElement.addEventListener('click', () => {
+      setActiveFilterButton(buttonElement, status);
+      eventHandler();
+    });
+    if (isActive) {
+      buttonElement.classList.add('active');
+    }
+    return buttonElement;
   };
 
   filterButtonsElement.append(
@@ -110,14 +120,25 @@ const TodoList = (): HTMLElement => {
       () => {
         applyFilter(() => true);
       },
-      true
+      true,
+      'all'
     ),
-    createFilterButtonElement('완료 전', () => {
-      applyFilter((todo) => !todo.completed);
-    }),
-    createFilterButtonElement('완료', () => {
-      applyFilter((todo) => todo.completed);
-    })
+    createFilterButtonElement(
+      '완료 전',
+      () => {
+        applyFilter((todo) => !todo.completed);
+      },
+      false,
+      'incompleted'
+    ),
+    createFilterButtonElement(
+      '완료',
+      () => {
+        applyFilter((todo) => todo.completed);
+      },
+      false,
+      'completed'
+    )
   );
 
   // let hoverPreviewTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -178,13 +199,14 @@ const TodoList = (): HTMLElement => {
   };
 
   document.addEventListener('mousemove', (event: MouseEvent) => {
-    if (draggedElement) {
+    if (draggedElement && filterStatus === 'incompleted') {
       draggedElement.style.left =
         event.pageX - draggedElement.offsetWidth / 2 - 45 + 'px';
       draggedElement.style.top =
         event.pageY - draggedElement.offsetHeight / 2 + 'px';
 
       const target = event.target as HTMLElement;
+
       if (target && target !== targetElement) {
         if (targetElement) {
           targetElement.classList.remove('drag-over');
@@ -211,15 +233,16 @@ const TodoList = (): HTMLElement => {
   });
 
   document.addEventListener('mouseup', () => {
-    if (draggedElement) {
+    if (draggedElement && filterStatus === 'incompleted') {
       document.body.removeChild(draggedElement);
-    }
 
-    if (draggedElement && targetElement) {
-      const targetIndex = todoList.findIndex((t) => t.id === +targetElement.id);
-
-      if (draggedIndex && targetIndex !== -1) {
-        moveTodoElement(draggedIndex, targetIndex);
+      if (targetElement) {
+        const targetIndex = todoList.findIndex(
+          (t) => t.id === +targetElement.id
+        );
+        if (draggedIndex > -1 && targetIndex !== -1) {
+          moveTodoElement(draggedIndex, targetIndex);
+        }
       }
     }
 
@@ -233,7 +256,7 @@ const TodoList = (): HTMLElement => {
   });
 
   document.addEventListener('keyup', (event) => {
-    if (event.key === 'Escape') {
+    if (event.key === 'Escape' && filterStatus === 'incompleted') {
       resetDragState();
     }
   });

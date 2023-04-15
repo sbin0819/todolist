@@ -3,3 +3,5 @@ export type Todo = {
   text: string;
   completed: boolean;
 };
+
+export type FilterStatus = 'all' | 'incompleted' | 'completed';
