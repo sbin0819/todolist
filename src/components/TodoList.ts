@@ -1,4 +1,5 @@
-import utils from '@utils/utils';
+import './todolist.css';
+import { createTodoElement } from './utils';
 
 type Todo = {
   id: number;
@@ -7,9 +8,9 @@ type Todo = {
 };
 
 const TodoList = (): HTMLElement => {
-  const { doc } = utils();
-  const todoListElement = doc.createElement('div');
-  const countElement = doc.createElement('div');
+  const todoListElement = document.createElement('div');
+  todoListElement.className = 'todo-list';
+  const countElement = document.createElement('div');
 
   const todoList: Todo[] = [
     { id: 1, text: 'todo1', completed: false },
@@ -19,42 +20,14 @@ const TodoList = (): HTMLElement => {
     { id: 5, text: 'todo5', completed: false },
   ];
 
-  const createTodoElement = (todo: Todo): HTMLElement => {
-    const todoElement = doc.createElement('div');
-    const spanElement = doc.createElement('span');
-
-    todoElement.dataset.id = todo.id.toString();
-    spanElement.id = todo.id.toString();
-
-    spanElement.textContent = todo.text;
-    todoElement.append(spanElement);
-    if (todo.completed) {
-      todoElement.classList.add('completed');
-    }
-    todoElement.addEventListener('click', () => {
-      todo.completed = !todo.completed;
-      todoElement.classList.toggle('completed');
-    });
-
-    // add drag and drop support
-    todoElement.setAttribute('draggable', 'true');
-    todoElement.addEventListener('dragstart', (event: DragEvent) => {
-      event.dataTransfer?.setData('text/plain', JSON.stringify(todo));
-      todoElement.classList.add('dragging');
-    });
-    todoElement.addEventListener('dragend', () => {
-      todoElement.classList.remove('dragging');
-    });
-
-    return todoElement;
-  };
-
   const todoElements = todoList.map((todo) => createTodoElement(todo));
   todoListElement.append(...todoElements);
 
-  const formElement = doc.createElement('form');
-  const inputElement = doc.createElement('input');
-  const submitButtonElement = doc.createElement('button');
+  const formElement = document.createElement('form');
+  const inputElement = document.createElement('input');
+  const submitButtonElement = document.createElement('button');
+  formElement.className = 'todo-form';
+  inputElement.className = 'todo-input';
 
   inputElement.type = 'text';
   inputElement.name = 'todo';
@@ -63,13 +36,15 @@ const TodoList = (): HTMLElement => {
 
   formElement.append(inputElement, submitButtonElement);
 
-  const filterButtonsElement = doc.createElement('div');
+  const bottomElement = document.createElement('div');
+  const filterButtonsElement = document.createElement('div');
+  bottomElement.className = 'bottom-container';
 
   const createFilterButtonElement = (
     text: string,
     filter: (todo: Todo) => boolean
   ) => {
-    const buttonElement = doc.createElement('button');
+    const buttonElement = document.createElement('button');
     buttonElement.textContent = text;
     buttonElement.addEventListener('click', () => {
       const filteredTodoList = todoList.filter(filter);
@@ -89,13 +64,11 @@ const TodoList = (): HTMLElement => {
 
   countElement.textContent = `(${todoList.length})`;
 
-  const containerElement = doc.createElement('div');
-  containerElement.append(
-    todoListElement,
-    formElement,
-    filterButtonsElement,
-    countElement
-  );
+  const containerElement = document.createElement('div');
+  containerElement.className = 'container';
+  bottomElement.append(countElement, filterButtonsElement);
+
+  containerElement.append(formElement, todoListElement, bottomElement);
 
   todoListElement.addEventListener('dragover', (event: DragEvent) => {
     event.preventDefault();
@@ -123,9 +96,8 @@ const TodoList = (): HTMLElement => {
 
   formElement.addEventListener('submit', (e) => {
     e.preventDefault();
-    const input = formElement.querySelector(
-      'input[name="todo"]'
-    ) as HTMLInputElement;
+    const input =
+      formElement.querySelector<HTMLInputElement>('input[name="todo"]');
     const text = input.value.trim();
     input.value = '';
     if (text) {
