@@ -33,7 +33,10 @@
 }
 
 .todo-item {
+  display: flex;
+  align-items: center;
   border-bottom: 1px solid #ddd;
+  height: 50px;
 }
 
 .todo-item.completed {

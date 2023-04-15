@@ -46,24 +46,50 @@ const TodoList = (): HTMLElement => {
       todoElement.classList.toggle('completed');
     });
 
-    todoElement.addEventListener('mousedown', (event) => {
-      draggedElement = todoElement.cloneNode(true) as HTMLElement;
+    // const handleMouseDown = (event: MouseEvent) => {
+    //   draggedElement = todoElement.cloneNode(true) as HTMLElement;
+    //   draggedElement.classList.add('dragging');
+    //   draggedElement.style.position = 'absolute';
+
+    //   document.body.appendChild(draggedElement);
+    //   draggedIndex = filteredTodoList.findIndex((t) => t.id === todo.id);
+    //   event.preventDefault();
+    // };
+
+    // todoElement.addEventListener('mousedown', handleMouseDown);
+    // todoElement.dataset.listener = 'mousedown';
+    // todoElement.dataset.listenerCallback = handleMouseDown.toString();
+
+    return todoElement;
+  };
+
+  const handleMouseDown =
+    (element: HTMLElement, todo: Todo, id: number) => (event: MouseEvent) => {
+      draggedElement = element.cloneNode(true) as HTMLElement;
       draggedElement.classList.add('dragging');
       draggedElement.style.position = 'absolute';
 
       document.body.appendChild(draggedElement);
-      draggedIndex = filteredTodoList.findIndex((t) => t.id === todo.id);
+      draggedIndex = filteredTodoList.findIndex((t) => t.id === +id);
       event.preventDefault();
-    });
-    return todoElement;
-  };
+    };
 
   const updateTodoListElement = () => {
     todoListElement.innerHTML = '';
-    const filteredTodoElements = filteredTodoList.map(createTodoElement);
+    const filteredTodoElements = todoList.map((todo) => {
+      const element = createTodoElement(todo);
+      element.removeEventListener(
+        'mousedown',
+        handleMouseDown(element, todo, +element.id)
+      );
+      element.addEventListener(
+        'mousedown',
+        handleMouseDown(element, todo, +element.id)
+      );
+      return element;
+    });
     todoListElement.append(...filteredTodoElements);
   };
-
   updateTodoListElement();
 
   countElement.textContent = `(${filteredTodoList.length})`;
@@ -154,7 +180,7 @@ const TodoList = (): HTMLElement => {
   document.addEventListener('mousemove', (event: MouseEvent) => {
     if (draggedElement) {
       draggedElement.style.left =
-        event.pageX - draggedElement.offsetWidth / 2 - 34 + 'px';
+        event.pageX - draggedElement.offsetWidth / 2 - 45 + 'px';
       draggedElement.style.top =
         event.pageY - draggedElement.offsetHeight / 2 + 'px';
 
@@ -224,6 +250,7 @@ const TodoList = (): HTMLElement => {
       todoList.unshift(todo);
       todoListElement.prepend(todoElement);
       updateCountElement();
+      updateTodoListElement();
     }
   });
 
