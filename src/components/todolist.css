@@ -27,7 +27,7 @@
 
 .todo-list {
   position: relative;
-  max-height: 300px;
+  max-height: 500px;
   margin: 10px 0;
   overflow: scroll;
 }
