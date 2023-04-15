@@ -31,3 +31,19 @@ export const createTodoElement = (todo: Todo): HTMLElement => {
 
   return todoElement;
 };
+
+export const createFormElement = (): HTMLFormElement => {
+  const formElement = document.createElement('form');
+  const inputElement = document.createElement('input');
+  const submitButtonElement = document.createElement('button');
+  formElement.className = 'todo-form';
+  inputElement.className = 'todo-input';
+
+  inputElement.type = 'text';
+  inputElement.name = 'todo';
+  submitButtonElement.type = 'submit';
+  submitButtonElement.textContent = 'submit';
+  formElement.append(inputElement, submitButtonElement);
+
+  return formElement;
+};

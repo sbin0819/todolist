@@ -1,17 +1,11 @@
+import type { Todo } from './types';
+import { createTodoElement, createFormElement } from './utils';
 import './todolist.css';
-import { createTodoElement } from './utils';
-
-type Todo = {
-  id: number;
-  text: string;
-  completed: boolean;
-};
 
 const TodoList = (): HTMLElement => {
   const todoListElement = document.createElement('div');
+  const formElement = createFormElement();
   todoListElement.className = 'todo-list';
-  const countElement = document.createElement('div');
-
   const todoList: Todo[] = [
     { id: 1, text: 'todo1', completed: false },
     { id: 2, text: 'todo2', completed: false },
@@ -19,50 +13,53 @@ const TodoList = (): HTMLElement => {
     { id: 4, text: 'todo4', completed: false },
     { id: 5, text: 'todo5', completed: false },
   ];
+  let filteredTodoList = [...todoList];
 
-  const todoElements = todoList.map((todo) => createTodoElement(todo));
-  todoListElement.append(...todoElements);
+  const updateTodoListElement = () => {
+    todoListElement.innerHTML = '';
+    const filteredTodoElements = filteredTodoList.map(createTodoElement);
+    todoListElement.append(...filteredTodoElements);
+  };
+  updateTodoListElement();
 
-  const formElement = document.createElement('form');
-  const inputElement = document.createElement('input');
-  const submitButtonElement = document.createElement('button');
-  formElement.className = 'todo-form';
-  inputElement.className = 'todo-input';
-
-  inputElement.type = 'text';
-  inputElement.name = 'todo';
-  submitButtonElement.type = 'submit';
-  submitButtonElement.textContent = 'submit';
-
-  formElement.append(inputElement, submitButtonElement);
-
+  const countElement = document.createElement('div');
   const bottomElement = document.createElement('div');
   const filterButtonsElement = document.createElement('div');
   bottomElement.className = 'bottom-container';
 
+  countElement.textContent = `(${filteredTodoList.length})`;
+
+  const updateCountElement = () => {
+    countElement.textContent = `(${filteredTodoList.length})`;
+  };
+
   const createFilterButtonElement = (
     text: string,
-    filter: (todo: Todo) => boolean
+    eventHandler: () => void
   ) => {
     const buttonElement = document.createElement('button');
     buttonElement.textContent = text;
-    buttonElement.addEventListener('click', () => {
-      const filteredTodoList = todoList.filter(filter);
-      const filteredTodoElements = filteredTodoList.map(createTodoElement);
-      todoListElement.innerHTML = '';
-      todoListElement.append(...filteredTodoElements);
-      countElement.textContent = `(${filteredTodoList.length})`;
-    });
+    buttonElement.addEventListener('click', eventHandler);
     return buttonElement;
   };
 
-  filterButtonsElement.append(
-    createFilterButtonElement('전체', () => true),
-    createFilterButtonElement('미완료', (todo) => !todo.completed),
-    createFilterButtonElement('완료', (todo) => todo.completed)
-  );
+  const applyFilter = (filter: (todo: Todo) => boolean) => {
+    filteredTodoList = todoList.filter(filter);
+    updateTodoListElement();
+    updateCountElement();
+  };
 
-  countElement.textContent = `(${todoList.length})`;
+  filterButtonsElement.append(
+    createFilterButtonElement('전체', () => {
+      applyFilter(() => true);
+    }),
+    createFilterButtonElement('미완료', () => {
+      applyFilter((todo) => !todo.completed);
+    }),
+    createFilterButtonElement('완료', () => {
+      applyFilter((todo) => todo.completed);
+    })
+  );
 
   const containerElement = document.createElement('div');
   containerElement.className = 'container';
@@ -78,7 +75,7 @@ const TodoList = (): HTMLElement => {
     event.preventDefault();
     const { dataTransfer } = event;
     const sourceTodo = JSON.parse(dataTransfer?.getData('text/plain') || '');
-    const destinationTodo = todoList.find(
+    const destinationTodo = filteredTodoList.find(
       ({ id }) => id === +((event.target as Element)?.id || '')
     );
     if (destinationTodo) {
@@ -88,9 +85,18 @@ const TodoList = (): HTMLElement => {
       );
       todoList.splice(sourceIndex, 1);
       todoList.splice(destinationIndex, 0, sourceTodo);
-      const newTodoElements = todoList.map(createTodoElement);
-      todoListElement.textContent = '';
-      todoListElement.append(...newTodoElements);
+
+      // Update filteredTodoList as well
+      const filteredSourceIndex = filteredTodoList.findIndex(
+        (el) => el.id === sourceTodo.id
+      );
+      const filteredDestinationIndex = filteredTodoList.findIndex(
+        (el) => el.id === destinationTodo.id
+      );
+      filteredTodoList.splice(filteredSourceIndex, 1);
+      filteredTodoList.splice(filteredDestinationIndex, 0, sourceTodo);
+
+      updateTodoListElement(); // Replace the newTodoElements-related code
     }
   });
 
@@ -101,11 +107,11 @@ const TodoList = (): HTMLElement => {
     const text = input.value.trim();
     input.value = '';
     if (text) {
-      const todo = { id: todoList.length + 1, text, completed: false };
+      const todo = { id: filteredTodoList.length + 1, text, completed: false };
       const todoElement = createTodoElement(todo);
-      todoList.unshift(todo);
+      filteredTodoList.unshift(todo);
       todoListElement.prepend(todoElement);
-      countElement.textContent = `(${todoList.length})`;
+      updateCountElement();
     }
   });
 
