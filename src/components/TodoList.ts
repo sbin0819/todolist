@@ -63,6 +63,7 @@ const TodoList = (): HTMLElement => {
     const filteredTodoElements = filteredTodoList.map(createTodoElement);
     todoListElement.append(...filteredTodoElements);
   };
+
   updateTodoListElement();
 
   countElement.textContent = `(${filteredTodoList.length})`;
@@ -208,6 +209,21 @@ const TodoList = (): HTMLElement => {
   document.addEventListener('keyup', (event) => {
     if (event.key === 'Escape') {
       resetDragState();
+    }
+  });
+
+  formElement.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const input =
+      formElement.querySelector<HTMLInputElement>('input[name="todo"]');
+    const text = input.value.trim();
+    input.value = '';
+    if (text) {
+      const todo = { id: todoList.length + 1, text, completed: false };
+      const todoElement = createTodoElement(todo);
+      todoList.unshift(todo);
+      todoListElement.prepend(todoElement);
+      updateCountElement();
     }
   });
 
