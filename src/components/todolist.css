@@ -47,8 +47,22 @@
 
 .todo-item.dragging {
   opacity: 0.5;
-  border: 3px dashed darkorange;
+  border: 2px dashed darkorange;
 }
+
+.todo-item.drag-over {
+  border-left: 4px solid green;
+  padding-left: 4px;
+}
+
+/* .todo-item.drag-over.preview {
+  background-color: gold;
+  border: 1px dashed black;
+}
+.todo-item.preview {
+  background-color: lightgray;
+  border: 1px dashed black;
+} */
 
 .bottom-container {
   display: flex;
