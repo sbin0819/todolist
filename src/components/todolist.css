@@ -55,14 +55,9 @@
   padding-left: 4px;
 }
 
-/* .todo-item.drag-over.preview {
-  background-color: gold;
-  border: 1px dashed black;
+.blur {
+  filter: blur(3px);
 }
-.todo-item.preview {
-  background-color: lightgray;
-  border: 1px dashed black;
-} */
 
 .bottom-container {
   display: flex;

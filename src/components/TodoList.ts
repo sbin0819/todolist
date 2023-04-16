@@ -182,11 +182,20 @@ const TodoList = (): HTMLElement => {
     };
 
     const moveTodoElement = (sourceIndex: number, targetIndex: number) => {
-      const [draggedTodo] = todoList.splice(sourceIndex, 1);
-      todoList.splice(targetIndex, 0, draggedTodo);
+      if (sourceIndex < targetIndex) {
+        const [draggedTodo] = todoList.splice(sourceIndex, 1);
+        todoList.splice(targetIndex, 0, draggedTodo);
 
-      const [filteredDraggedTodo] = filteredTodoList.splice(sourceIndex, 1);
-      filteredTodoList.splice(targetIndex, 0, filteredDraggedTodo);
+        const [filteredDraggedTodo] = filteredTodoList.splice(sourceIndex, 1);
+        filteredTodoList.splice(targetIndex, 0, filteredDraggedTodo);
+      } else {
+        const [draggedTodo] = todoList.splice(sourceIndex, 1);
+        todoList.splice(targetIndex, 0, draggedTodo);
+
+        const [filteredDraggedTodo] = filteredTodoList.splice(sourceIndex, 1);
+        filteredTodoList.splice(targetIndex, 0, filteredDraggedTodo);
+      }
+
       updateTodoListElement();
     };
 
