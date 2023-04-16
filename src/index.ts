@@ -1,9 +1,5 @@
-import './style/global.css';
-
-import TodoList from '@components/TodoList';
+import App from './App';
 
 (function RootComponent() {
-  const appElment = document.querySelector('#app');
-  const todoListElement = TodoList();
-  appElment.append(todoListElement);
+  App();
 })();
