@@ -16,24 +16,6 @@ export const createFormElement = (): HTMLFormElement => {
   return formElement;
 };
 
-export const createTodoElement = (todo: Todo): HTMLElement => {
-  const todoElement = document.createElement('div');
-
-  todoElement.id = todo.id.toString();
-  todoElement.className = 'todo-item';
-  todoElement.textContent = todo.text;
-
-  if (todo.completed) {
-    todoElement.classList.add('completed');
-  }
-  todoElement.addEventListener('click', () => {
-    todo.completed = !todo.completed;
-    todoElement.classList.toggle('completed');
-  });
-
-  return todoElement;
-};
-
 export const filterHandler = (
   status: FilterStatus
 ): ((todo?: Todo) => boolean) => {
