@@ -15,6 +15,8 @@ const TodoList = (): HTMLElement => {
   let draggedElement: HTMLElement | null = null;
   let draggedIndex: number | null = null;
   let targetElement: HTMLElement | null = null;
+  let draggedTimerId: NodeJS.Timeout | null = null;
+  let targetTextContent: string | null = null;
 
   const formElement = createFormElement();
   const todoListElement = document.createElement('div');
@@ -208,6 +210,18 @@ const TodoList = (): HTMLElement => {
         targetElement.classList.remove('drag-over');
         targetElement = null;
       }
+
+      if (draggedTimerId) {
+        todoListElement.querySelectorAll('.todo-item').forEach((item) => {
+          if (targetTextContent && item?.classList.contains('preview')) {
+            item.textContent = targetTextContent;
+            targetTextContent = null;
+            item.classList.remove('preview');
+          }
+        });
+
+        clearTimeout(draggedTimerId);
+      }
     };
 
     const registEventHandler = () => {
@@ -225,11 +239,28 @@ const TodoList = (): HTMLElement => {
           if (target && target !== targetElement) {
             if (targetElement) {
               targetElement.classList.remove('drag-over');
+              if (targetElement?.classList.contains('preview')) {
+                targetElement?.classList.remove('preview');
+                clearTimeout(draggedTimerId);
+                if (targetTextContent) {
+                  targetElement.textContent = targetTextContent;
+                  targetTextContent = null;
+                }
+              }
             }
 
             if (target.classList.contains('todo-item')) {
               targetElement = target;
               targetElement.classList.add('drag-over');
+              if (!targetElement?.classList.contains('preview')) {
+                draggedTimerId = setTimeout(() => {
+                  targetElement?.classList.add('preview');
+                  if (!targetTextContent) {
+                    targetTextContent = targetElement?.textContent;
+                  }
+                  targetElement.textContent = draggedElement?.textContent;
+                }, 2000);
+              }
             } else {
               targetElement = null;
             }
@@ -263,6 +294,7 @@ const TodoList = (): HTMLElement => {
 
         draggedElement = null;
         draggedIndex = null;
+        targetTextContent = null;
 
         if (targetElement) {
           targetElement.classList.remove('drag-over');
