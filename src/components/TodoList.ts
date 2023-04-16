@@ -25,98 +25,115 @@ const TodoList = (): HTMLElement => {
     const countElement = document.createElement('div');
     const filterButtonsElement = document.createElement('div');
     const deleteTodoListElement = document.createElement('div');
+    const deleteButton = document.createElement('button');
 
-    const updateDeleteButtonText = () => {
-      deleteButton.innerText = `삭제 (${
-        todoList.filter((todo) => todo.completed).length
-      })`;
-    };
+    const updateLayout = {
+      createTodoElement: (todo: Todo): HTMLElement => {
+        const todoElement = document.createElement('div');
+        todoElement.id = todo.id.toString();
+        todoElement.className = 'todo-item';
+        todoElement.textContent = todo.text;
 
-    const updateCountElement = (filteredTodoList: Todo[]) => {
-      countElement.textContent = `(${filteredTodoList.length}) left items`;
-    };
+        if (todo.completed) {
+          todoElement.classList.add('completed');
+        }
+        todoElement.addEventListener('click', () =>
+          fn.handleTodoClick(todo, todoElement)
+        );
+        return todoElement;
+      },
+      updateDeleteButtonText: (deleteButton: HTMLButtonElement) => {
+        deleteButton.innerText = `삭제 (${
+          todoList.filter((todo) => todo.completed).length
+        })`;
+      },
+      updateCountElement: (
+        countElement: HTMLDivElement,
+        filteredTodoList: Todo[]
+      ) => {
+        countElement.textContent = `(${filteredTodoList.length}) left items`;
+      },
 
-    updateCountElement(filteredTodoList);
+      updateTodoListElement: (
+        todoListElement: HTMLDivElement,
+        filterStatus: FilterStatus,
+        todoList: Todo[]
+      ) => {
+        const filter = filterHandler(filterStatus);
+        todoListElement.innerHTML = '';
+        const filteredTodoList = todoList.filter(filter);
+        const filteredTodoElements = filteredTodoList.map((todo) => {
+          const element = updateLayout.createTodoElement(todo);
+          if (filterStatus === 'incompleted') {
+            element.removeEventListener(
+              'mousedown',
+              fn.handleMouseDown(element, +element.id)
+            );
+            element.addEventListener(
+              'mousedown',
+              fn.handleMouseDown(element, +element.id)
+            );
+          }
+          return element;
+        });
 
-    const handleMouseDown =
-      (element: HTMLElement, id: number) => (event: MouseEvent) => {
-        draggedElement = element.cloneNode(true) as HTMLElement;
-        draggedElement.classList.add('dragging');
-        draggedElement.style.position = 'absolute';
-        document.body.appendChild(draggedElement);
-        draggedIndex = todoList.findIndex((t) => t?.id === +id);
-        event.preventDefault();
-      };
-
-    const sortTodoList = () => {
-      todoList.sort((a, b) => {
-        if (a.completed && !b.completed) return 1;
-        if (!a.completed && b.completed) return -1;
-        if (a.completed && b.completed) return +b.completedAt - +a.completedAt;
-        return +b.createdAt - +a.createdAt;
-      });
-    };
-
-    const handleTodoClick = (todo: Todo, todoElement: HTMLElement) => {
-      todo.completed = !todo.completed;
-      todo.completedAt = todo.completed ? new Date() : null;
-      todoElement.classList.toggle('completed');
-      sortTodoList();
-      updateTodoListElement();
-      updateDeleteButtonText();
-    };
-
-    const createTodoElement = (todo: Todo): HTMLElement => {
-      const todoElement = document.createElement('div');
-
-      todoElement.id = todo.id.toString();
-      todoElement.className = 'todo-item';
-      todoElement.textContent = todo.text;
-
-      if (todo.completed) {
-        todoElement.classList.add('completed');
-      }
-      todoElement.addEventListener('click', () =>
-        handleTodoClick(todo, todoElement)
-      );
-
-      return todoElement;
-    };
-
-    const updateTodoListElement = () => {
-      const filter = filterHandler(filterStatus);
-      todoListElement.innerHTML = '';
-      const filteredTodoList = todoList.filter(filter);
-      const filteredTodoElements = filteredTodoList.map((todo) => {
-        const element = createTodoElement(todo);
-        if (filterStatus === 'incompleted') {
-          element.removeEventListener(
-            'mousedown',
-            handleMouseDown(element, +element.id)
-          );
-          element.addEventListener(
-            'mousedown',
-            handleMouseDown(element, +element.id)
+        if (filterStatus !== 'all') {
+          updateLayout.updateCountElement(
+            countElement,
+            todoList.filter(filter)
           );
         }
-        return element;
-      });
 
-      if (filterStatus !== 'all') {
-        updateCountElement(todoList.filter(filter));
-      }
-
-      todoListElement.append(...filteredTodoElements);
+        todoListElement.append(...filteredTodoElements);
+      },
     };
-    updateTodoListElement();
+
+    const fn = {
+      handleMouseDown:
+        (element: HTMLElement, id: number) => (event: MouseEvent) => {
+          draggedElement = element.cloneNode(true) as HTMLElement;
+          draggedElement.classList.add('dragging');
+          draggedElement.style.position = 'absolute';
+          document.body.appendChild(draggedElement);
+          draggedIndex = todoList.findIndex((t) => t?.id === +id);
+          event.preventDefault();
+        },
+      sortTodoList: (todoList: Todo[]) => {
+        todoList.sort((a, b) => {
+          if (a.completed && !b.completed) return 1;
+          if (!a.completed && b.completed) return -1;
+          if (a.completed && b.completed)
+            return +b.completedAt - +a.completedAt;
+          return +b.createdAt - +a.createdAt;
+        });
+      },
+      handleTodoClick: (todo: Todo, todoElement: HTMLElement) => {
+        todo.completed = !todo.completed;
+        todo.completedAt = todo.completed ? new Date() : null;
+        todoElement.classList.toggle('completed');
+        fn.sortTodoList(todoList);
+        updateLayout.updateTodoListElement(
+          todoListElement,
+          filterStatus,
+          todoList
+        );
+        updateLayout.updateDeleteButtonText(deleteButton);
+      },
+    };
+
+    updateLayout.updateTodoListElement(todoListElement, filterStatus, todoList);
 
     const applyFilter = (filter: (todo: Todo) => boolean) => {
       const sortedFilter = todoList.sort(
         (a, b) => +a.completedAt - +b.completedAt
       );
       filteredTodoList = sortedFilter.filter(filter);
-      updateCountElement(filteredTodoList);
-      updateTodoListElement();
+      updateLayout.updateCountElement(countElement, filteredTodoList);
+      updateLayout.updateTodoListElement(
+        todoListElement,
+        filterStatus,
+        todoList
+      );
     };
 
     const setActiveFilterButton = (
@@ -195,7 +212,11 @@ const TodoList = (): HTMLElement => {
         filteredTodoList.splice(targetIndex, 0, filteredDraggedTodo);
       }
 
-      updateTodoListElement();
+      updateLayout.updateTodoListElement(
+        todoListElement,
+        filterStatus,
+        todoList
+      );
     };
 
     document.addEventListener('mousemove', (event: MouseEvent) => {
@@ -275,28 +296,33 @@ const TodoList = (): HTMLElement => {
           createdAt: new Date(),
           completedAt: null,
         };
-        const todoElement = createTodoElement(todo);
+        const todoElement = updateLayout.createTodoElement(todo);
         todoList.unshift(todo);
         todoListElement.prepend(todoElement);
-        updateCountElement(todoList);
-        updateTodoListElement();
+        updateLayout.updateCountElement(countElement, todoList);
+        updateLayout.updateTodoListElement(
+          todoListElement,
+          filterStatus,
+          todoList
+        );
       }
     });
 
-    document.addEventListener('stateChange', () => {
-      console.log('stateChange');
-    });
+    updateLayout.updateCountElement(countElement, filteredTodoList);
 
     const deleteCompletedTodo = () => {
       todoList = todoList.filter((todo) => !todo.completed);
       filteredTodoList = filteredTodoList.filter((todo) => !todo.completed);
-      updateTodoListElement();
-      updateCountElement(todoList);
-      updateDeleteButtonText();
+      updateLayout.updateTodoListElement(
+        todoListElement,
+        filterStatus,
+        todoList
+      );
+      updateLayout.updateCountElement(countElement, todoList);
+      updateLayout.updateDeleteButtonText(deleteButton);
     };
 
-    const deleteButton = document.createElement('button');
-    updateDeleteButtonText();
+    updateLayout.updateDeleteButtonText(deleteButton);
     deleteButton.addEventListener('click', deleteCompletedTodo);
     deleteTodoListElement.append(deleteButton);
 
