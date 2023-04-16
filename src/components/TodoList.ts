@@ -296,6 +296,10 @@ const TodoList = (): HTMLElement => {
         draggedIndex = null;
         targetTextContent = null;
 
+        if (draggedTimerId) {
+          clearTimeout(draggedTimerId);
+        }
+
         if (targetElement) {
           targetElement.classList.remove('drag-over');
           targetElement = null;
