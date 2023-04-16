@@ -17,6 +17,7 @@ const TodoList = (): HTMLElement => {
   let targetElement: HTMLElement | null = null;
   let draggedTimerId: NodeJS.Timeout | null = null;
   let targetTextContent: string | null = null;
+  // let draggedTextContent: string | null = null;
 
   const formElement = createFormElement();
   const todoListElement = document.createElement('div');
@@ -213,7 +214,7 @@ const TodoList = (): HTMLElement => {
 
       if (draggedTimerId) {
         todoListElement.querySelectorAll('.todo-item').forEach((item) => {
-          if (targetTextContent && item?.classList.contains('preview')) {
+          if (item?.classList.contains('preview')) {
             item.textContent = targetTextContent;
             targetTextContent = null;
             item.classList.remove('preview');
@@ -241,10 +242,12 @@ const TodoList = (): HTMLElement => {
               targetElement.classList.remove('drag-over');
               if (targetElement?.classList.contains('preview')) {
                 targetElement?.classList.remove('preview');
-                clearTimeout(draggedTimerId);
-                if (targetTextContent) {
-                  targetElement.textContent = targetTextContent;
-                  targetTextContent = null;
+                if (draggedTimerId) {
+                  clearTimeout(draggedTimerId);
+                  if (targetTextContent) {
+                    targetElement.textContent = targetTextContent;
+                    targetTextContent = null;
+                  }
                 }
               }
             }
@@ -252,13 +255,17 @@ const TodoList = (): HTMLElement => {
             if (target.classList.contains('todo-item')) {
               targetElement = target;
               targetElement.classList.add('drag-over');
-              if (!targetElement?.classList.contains('preview')) {
+              if (
+                targetElement &&
+                draggedElement?.textContent &&
+                !targetElement?.classList.contains('preview')
+              ) {
                 draggedTimerId = setTimeout(() => {
                   targetElement?.classList.add('preview');
-                  if (!targetTextContent) {
-                    targetTextContent = targetElement?.textContent;
+                  if (targetTextContent === null) {
+                    // targetTextContent = targetElement?.textContent;
+                    // targetElement.textContent = draggedElement?.textContent;
                   }
-                  targetElement.textContent = draggedElement?.textContent;
                 }, 2000);
               }
             } else {
@@ -348,7 +355,7 @@ const TodoList = (): HTMLElement => {
           false,
           'incompleted',
           () => {
-            fn.applyFilter((todo) => !todo.completed);
+            fn.applyFilter((todo) => !todo?.completed);
           }
         ),
         layoutHelper.createFilterButtonElement(
