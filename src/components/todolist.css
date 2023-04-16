@@ -4,6 +4,7 @@
   overflow: hidden;
   margin: 50px auto;
   padding: 24px;
+  border-radius: 16px;
 
   -webkit-touch-callout: none;
   -webkit-user-select: none;
@@ -13,12 +14,20 @@
   user-select: none;
 }
 
-.todo-form {
-  background: #eee;
-}
-
 .todo-form > .todo-input {
   width: 100%;
+  padding: 10px 8px;
+  font-family: inherit;
+  border: 1px solid #999;
+  border-radius: 8px;
+  outline-style: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.todo-input:focus {
+  border-color: darkorange;
 }
 
 .todo-form > button[type='submit'] {
@@ -51,7 +60,7 @@
 }
 
 .todo-item.drag-over {
-  border-left: 4px solid green;
+  border-left: 4px solid darkorange;
   padding-left: 4px;
 }
 
@@ -66,9 +75,10 @@
 }
 
 .bottom-container button {
-  padding: 4px 8px;
+  padding: 4px 10px;
   margin-right: 8px;
   background: #eee;
+  border-radius: 4px;
 }
 
 .bottom-container button.active {
