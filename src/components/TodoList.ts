@@ -303,6 +303,33 @@ const TodoList = (): HTMLElement => {
     };
 
     const initLayout = () => {
+      filterButtonsElement.append(
+        layoutHelper.createFilterButtonElement('전체', true, 'all', () => {
+          fn.applyFilter(() => true);
+        }),
+        layoutHelper.createFilterButtonElement(
+          '완료 전',
+          false,
+          'incompleted',
+          () => {
+            fn.applyFilter((todo) => !todo.completed);
+          }
+        ),
+        layoutHelper.createFilterButtonElement(
+          '완료',
+          false,
+          'completed',
+          () => {
+            fn.applyFilter((todo) => todo.completed);
+          }
+        )
+      );
+      deleteTodoListElement.append(deleteButton);
+      bottomElement.append(
+        countElement,
+        filterButtonsElement,
+        deleteTodoListElement
+      );
       layoutHelper.updateTodoListElement(
         todoListElement,
         filterStatus,
@@ -312,33 +339,10 @@ const TodoList = (): HTMLElement => {
       layoutHelper.updateDeleteButtonText(deleteButton);
     };
 
-    filterButtonsElement.append(
-      layoutHelper.createFilterButtonElement('전체', true, 'all', () => {
-        fn.applyFilter(() => true);
-      }),
-      layoutHelper.createFilterButtonElement(
-        '완료 전',
-        false,
-        'incompleted',
-        () => {
-          fn.applyFilter((todo) => !todo.completed);
-        }
-      ),
-      layoutHelper.createFilterButtonElement('완료', false, 'completed', () => {
-        fn.applyFilter((todo) => todo.completed);
-      })
-    );
-    deleteTodoListElement.append(deleteButton);
-    bottomElement.append(
-      countElement,
-      filterButtonsElement,
-      deleteTodoListElement
-    );
-
-    containerElement.append(formElement, todoListElement, bottomElement);
-
     initLayout();
     registEventHandler();
+
+    containerElement.append(formElement, todoListElement, bottomElement);
   };
   render();
 
