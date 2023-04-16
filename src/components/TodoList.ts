@@ -1,8 +1,16 @@
 import type { Todo } from './types';
 import { createFormElement, filterHandler } from './utils';
 import './todolist.css';
+// import TodoStore, { State } from './todoStore';
 
 type FilterStatus = 'all' | 'incompleted' | 'completed';
+
+// const initialState: State = { todos: [] };
+// const todoStore = new TodoStore(initialState);
+
+// todoStore.subscribe('todos', () => {
+// console.log(todoStore.getState().todos);
+// });
 
 const TodoList = (): HTMLElement => {
   const containerElement = document.createElement('div');
