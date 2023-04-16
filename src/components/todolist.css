@@ -55,8 +55,8 @@
   padding-left: 4px;
 }
 
-.blur {
-  filter: blur(3px);
+.todo-item.preview {
+  filter: blur(1px);
 }
 
 .bottom-container {

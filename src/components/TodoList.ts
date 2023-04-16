@@ -5,10 +5,16 @@ import './todolist.css';
 type FilterStatus = 'all' | 'incompleted' | 'completed';
 
 const TodoList = (): HTMLElement => {
-  let todoList: Todo[] = [];
-
   const containerElement = document.createElement('div');
   containerElement.className = 'container';
+
+  let todoList: Todo[] = [];
+  let filteredTodoList = [...todoList];
+  let filterStatus: FilterStatus = 'all';
+
+  let draggedElement: HTMLElement | null = null;
+  let draggedIndex: number | null = null;
+  let targetElement: HTMLElement | null = null;
 
   const render = () => {
     const formElement = createFormElement();
@@ -19,13 +25,6 @@ const TodoList = (): HTMLElement => {
     const countElement = document.createElement('div');
     const filterButtonsElement = document.createElement('div');
     const deleteTodoListElement = document.createElement('div');
-
-    let filteredTodoList = [...todoList];
-    let filterStatus: FilterStatus = 'all';
-
-    let draggedElement: HTMLElement | null = null;
-    let draggedIndex: number | null = null;
-    let targetElement: HTMLElement | null = null;
 
     const updateDeleteButtonText = () => {
       deleteButton.innerText = `삭제 (${
